@@ -1,11 +1,20 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiContextEnum } from '#common/enums'
 import { TrendingController } from './trending.controller'
 import { TrendingService } from '../services/trending.service'
 import type { TrendingSongResponse } from '../models/trending.model'
 
 describe('TrendingController', () => {
-  describe('getTrendingSongs', () => {
+  let trendingController: TrendingController
+  let trendingService: TrendingService
+
+  beforeEach(() => {
+    trendingController = new TrendingController()
+    trendingService = new TrendingService()
+    trendingController.initRoutes()
+  })
+
+  describe('/trending endpoint', () => {
     it('should return trending songs successfully', async () => {
       const mockSongs: TrendingSongResponse[] = [{
         id: 'test_id',
@@ -54,32 +63,42 @@ describe('TrendingController', () => {
         }
       }]
 
-      vi.spyOn(TrendingService, 'getTrendingSongs').mockResolvedValue(mockSongs)
+      vi.spyOn(TrendingService.prototype, 'getTrendingSongs').mockResolvedValue(mockSongs)
 
-      const result = await TrendingController.getTrendingSongs(ApiContextEnum.WEB6DOT0)
+      const response = await trendingController.controller.request('/trending')
+      const result = await response.json()
 
-      expect(result.status).toBe(true)
+      expect(result.success).toBe(true)
       expect(result.message).toBe('Trending songs fetched successfully')
       expect(result.data).toEqual(mockSongs)
     })
 
     it('should handle errors gracefully', async () => {
       const errorMessage = 'Network error'
-      vi.spyOn(TrendingService, 'getTrendingSongs').mockRejectedValue(new Error(errorMessage))
+      vi.spyOn(TrendingService.prototype, 'getTrendingSongs').mockRejectedValue(new Error(errorMessage))
 
-      const result = await TrendingController.getTrendingSongs(ApiContextEnum.WEB6DOT0)
+      const response = await trendingController.controller.request('/trending')
+      const result = await response.json()
 
-      expect(result.status).toBe(false)
+      expect(result.success).toBe(false)
       expect(result.message).toBe(errorMessage)
       expect(result.data).toEqual([])
     })
 
     it('should use default language and context if not provided', async () => {
-      vi.spyOn(TrendingService, 'getTrendingSongs').mockResolvedValue([])
+      vi.spyOn(TrendingService.prototype, 'getTrendingSongs').mockResolvedValue([])
 
-      await TrendingController.getTrendingSongs()
+      await trendingController.controller.request('/trending')
 
-      expect(TrendingService.getTrendingSongs).toHaveBeenCalledWith(undefined, ApiContextEnum.WEB6DOT0)
+      expect(TrendingService.prototype.getTrendingSongs).toHaveBeenCalledWith(undefined, ApiContextEnum.WEB6DOT0)
+    })
+
+    it('should accept language and context parameters', async () => {
+      vi.spyOn(TrendingService.prototype, 'getTrendingSongs').mockResolvedValue([])
+
+      await trendingController.controller.request('/trending?language=hindi&context=android')
+
+      expect(TrendingService.prototype.getTrendingSongs).toHaveBeenCalledWith('hindi', ApiContextEnum.ANDROID)
     })
   })
 })
