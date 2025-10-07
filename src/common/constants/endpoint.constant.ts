@@ -11,11 +11,18 @@ export const Endpoints = {
     link: 'webapi.get',
     suggestions: 'webradio.getSong',
     lyrics: 'lyrics.getLyrics',
-    station: 'webradio.createEntityStation'
+    station: 'webradio.createEntityStation',
+    newReleases: 'content.getAlbums'
+  },
+  trending: {
+    songs: 'content.getTrending',
+    albums: 'content.getTrending',
+    playlists: 'content.getTrending'
   },
   albums: {
     id: 'content.getAlbumDetails',
-    link: 'webapi.get'
+    link: 'webapi.get',
+    recommendations: 'reco.getAlbumReco'
   },
   artists: {
     id: 'artist.getArtistPageDetails',
@@ -25,8 +32,8 @@ export const Endpoints = {
   },
   playlists: {
     id: 'playlist.getDetails',
-    link: 'webapi.get'
+    link: 'webapi.get',
+    featured: 'content.getFeaturedPlaylists'
   },
-  modules: 'content.getBrowseModules',
-  trending: 'content.getTrending'
+  modules: 'content.getBrowseModules'
 }

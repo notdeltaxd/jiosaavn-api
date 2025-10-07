@@ -16,6 +16,88 @@ export class PlaylistController implements Routes {
     this.controller.openapi(
       createRoute({
         method: 'get',
+        path: '/playlists/trending',
+        tags: ['Playlist'],
+        summary: 'Retrieve trending playlists',
+        description: 'Retrieve trending playlists for a given language (default hindi).',
+        operationId: 'getTrendingPlaylists',
+        request: {
+          query: z.object({
+            language: z.string().optional().openapi({
+              title: 'Language',
+              description: 'Language code for trending entity_language',
+              example: 'hindi',
+              default: 'hindi'
+            })
+          })
+        },
+        responses: {
+          200: {
+            description: 'Successful response with trending playlists',
+            content: {
+              'application/json': {
+                schema: z.object({
+                  success: z.boolean(),
+                  data: z.array(PlaylistModel)
+                })
+              }
+            }
+          }
+        }
+      }),
+      async (ctx) => {
+        const { language } = ctx.req.valid('query')
+
+        const playlists = await this.playlistService.getTrendingPlaylists(language)
+
+        return ctx.json({ success: true, data: playlists })
+      }
+    )
+
+    this.controller.openapi(
+      createRoute({
+        method: 'get',
+        path: '/playlists/featured',
+        tags: ['Playlist'],
+        summary: 'Retrieve featured playlists',
+        description: 'Retrieve featured playlists with pagination. Returns full playlist details.',
+        operationId: 'getFeaturedPlaylists',
+        request: {
+          query: z.object({
+            limit: z.string().pipe(z.coerce.number()).optional().openapi({
+              title: 'Limit',
+              description: 'Number of items to return',
+              example: '50',
+              default: '50'
+            }),
+            page: z.string().pipe(z.coerce.number()).optional().openapi({
+              title: 'Page',
+              description: 'Page number (1-indexed)',
+              example: '1',
+              default: '1'
+            })
+          })
+        },
+        responses: {
+          200: {
+            description: 'Successful response with featured playlists',
+            content: {
+              'application/json': {
+                schema: z.object({ success: z.boolean(), data: z.array(PlaylistModel) })
+              }
+            }
+          }
+        }
+      }),
+      async (ctx) => {
+        const { limit, page } = ctx.req.valid('query')
+        const playlists = await this.playlistService.getFeaturedPlaylists({ limit, page })
+        return ctx.json({ success: true, data: playlists })
+      }
+    )
+    this.controller.openapi(
+      createRoute({
+        method: 'get',
         path: '/playlists',
         tags: ['Playlist'],
         summary: 'Retrieve a playlist by ID or link',

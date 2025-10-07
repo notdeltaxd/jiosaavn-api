@@ -16,6 +16,46 @@ export class AlbumController implements Routes {
     this.controller.openapi(
       createRoute({
         method: 'get',
+        path: '/albums/trending',
+        tags: ['Album'],
+        summary: 'Retrieve trending albums',
+        description: 'Retrieve trending albums for a given language (default hindi).',
+        operationId: 'getTrendingAlbums',
+        request: {
+          query: z.object({
+            language: z.string().optional().openapi({
+              title: 'Language',
+              description: 'Language code for trending entity_language',
+              example: 'hindi',
+              default: 'hindi'
+            })
+          })
+        },
+        responses: {
+          200: {
+            description: 'Successful response with trending albums',
+            content: {
+              'application/json': {
+                schema: z.object({
+                  success: z.boolean(),
+                  data: z.array(AlbumModel)
+                })
+              }
+            }
+          }
+        }
+      }),
+      async (ctx) => {
+        const { language } = ctx.req.valid('query')
+
+        const albums = await this.albumService.getTrendingAlbums(language)
+
+        return ctx.json({ success: true, data: albums })
+      }
+    )
+    this.controller.openapi(
+      createRoute({
+        method: 'get',
         path: '/albums',
         tags: ['Album'],
         summary: 'Retrieve an album by ID or link',
@@ -73,6 +113,43 @@ export class AlbumController implements Routes {
         const response = link ? await this.albumService.getAlbumByLink(link) : await this.albumService.getAlbumById(id!)
 
         return ctx.json({ success: true, data: response })
+      }
+    )
+    this.controller.openapi(
+      createRoute({
+        method: 'get',
+        path: '/albums/{id}/recommendations',
+        tags: ['Album'],
+        summary: 'Retrieve album recommendations',
+        description: 'Retrieve recommended albums for a given album ID. Returns full album details.',
+        operationId: 'getAlbumRecommendations',
+        request: {
+          params: z.object({
+            id: z.string().openapi({
+              title: 'Album ID',
+              description: 'The source album ID to get recommendations for',
+              example: '53848681'
+            })
+          })
+        },
+        responses: {
+          200: {
+            description: 'Successful response with album recommendations',
+            content: {
+              'application/json': {
+                schema: z.object({
+                  success: z.boolean(),
+                  data: z.array(AlbumModel)
+                })
+              }
+            }
+          }
+        }
+      }),
+      async (ctx) => {
+        const albumId = ctx.req.param('id')
+        const albums = await this.albumService.getAlbumRecommendations(albumId)
+        return ctx.json({ success: true, data: albums })
       }
     )
   }

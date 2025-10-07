@@ -19,6 +19,88 @@ export class SongController implements Routes {
     this.controller.openapi(
       createRoute({
         method: 'get',
+        path: '/songs/trending',
+        tags: ['Songs'],
+        summary: 'Retrieve trending songs',
+        description: 'Retrieve trending songs for a given language (default hindi).',
+        operationId: 'getTrendingSongs',
+        request: {
+          query: z.object({
+            language: z.string().optional().openapi({
+              title: 'Language',
+              description: 'Language code for trending entity_language',
+              example: 'hindi',
+              default: 'hindi'
+            })
+          })
+        },
+        responses: {
+          200: {
+            description: 'Successful response with trending songs',
+            content: {
+              'application/json': {
+                schema: z.object({
+                  success: z.boolean(),
+                  data: z.array(SongModel)
+                })
+              }
+            }
+          }
+        }
+      }),
+      async (ctx) => {
+        const { language } = ctx.req.valid('query')
+
+        const songs = await this.songService.getTrendingSongs(language)
+
+        return ctx.json({ success: true, data: songs })
+      }
+    )
+
+    this.controller.openapi(
+      createRoute({
+        method: 'get',
+        path: '/songs/new-releases',
+        tags: ['Songs'],
+        summary: 'Retrieve new releases',
+        description: 'Retrieve latest released songs. Supports pagination.',
+        operationId: 'getNewReleases',
+        request: {
+          query: z.object({
+            limit: z.string().pipe(z.coerce.number()).optional().openapi({
+              title: 'Limit',
+              description: 'Number of items to return',
+              example: '50',
+              default: '50'
+            }),
+            page: z.string().pipe(z.coerce.number()).optional().openapi({
+              title: 'Page',
+              description: 'Page number (1-indexed)',
+              example: '1',
+              default: '1'
+            })
+          })
+        },
+        responses: {
+          200: {
+            description: 'Successful response with new release songs',
+            content: {
+              'application/json': {
+                schema: z.object({ success: z.boolean(), data: z.array(SongModel) })
+              }
+            }
+          }
+        }
+      }),
+      async (ctx) => {
+        const { limit, page } = ctx.req.valid('query')
+        const songs = await this.songService.getNewReleases({ limit, page })
+        return ctx.json({ success: true, data: songs })
+      }
+    )
+    this.controller.openapi(
+      createRoute({
+        method: 'get',
         path: '/songs',
         tags: ['Songs'],
         summary: 'Retrieve songs by ID or link',

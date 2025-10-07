@@ -1,4 +1,4 @@
-import { AlbumController, ArtistController, SearchController, SongController, TrendingController } from '#modules/index'
+import { AlbumController, ArtistController, SearchController, SongController } from '#modules/index'
 import { PlaylistController } from '#modules/playlists/controllers'
 import { App } from './app'
 
@@ -7,8 +7,7 @@ const app = new App([
   new SongController(),
   new AlbumController(),
   new ArtistController(),
-  new PlaylistController(),
-  new TrendingController()
+  new PlaylistController()
 ]).getApp()
 
 export default app
