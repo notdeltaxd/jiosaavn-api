@@ -15,16 +15,26 @@ export class GetTrendingPlaylistsUseCase
   constructor() {}
 
   async execute({ language = 'hindi' }: GetTrendingPlaylistsArgs) {
-    const { data } = await useFetch<z.infer<typeof PlaylistAPIResponseModel>[]>({
+    // Step 1: fetch trending playlists (returns mini objects)
+    const { data } = await useFetch<any[]>({
       endpoint: Endpoints.trending.playlists,
-      params: {
-        entity_type: 'playlist',
-        entity_language: language
-      }
+      params: { entity_type: 'playlist', entity_language: language }
     })
 
     if (!Array.isArray(data) || !data.length) return []
 
-    return data.map((playlist) => createPlaylistPayload(playlist))
+    // Step 2: hydrate each playlist with full details using listid
+    const playlists = await Promise.all(
+      data.map(async (item) => {
+        const listid = item?.more_info?.listid || item?.id
+        const { data: full } = await useFetch<z.infer<typeof PlaylistAPIResponseModel>>({
+          endpoint: Endpoints.playlists.id,
+          params: { listid }
+        })
+        return createPlaylistPayload(full)
+      })
+    )
+
+    return playlists
   }
 }
